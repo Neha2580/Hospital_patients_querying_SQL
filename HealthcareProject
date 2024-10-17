@@ -1,0 +1,156 @@
+SELECT * from patients
+
+
+--1.Write a query that does the following:
+---Lists out number of patients in descending order
+---Does not include Quincy
+---Must have at least 20 patients from that city
+
+
+SELECT city , count(*) as patients_cnt from patients
+WHERE city != 'Quincy' 
+GROUP by city
+HAVING patients_cnt >=5
+order by count(*);
+
+
+SELECT * from encounters
+
+--2. To find out the Top 10 patients with the most visits to the hospital.
+select p.id , count(e.id) as visits , p.city
+from patients p inner join encounters e
+on p.id = e.patient
+group by p.id, p.CITY
+order by visits DESC
+LIMIT 10
+
+
+
+--3. To find out the number of times patients from each city visited the hospital.
+SELECT p.CITY , count(e.id) as cnt from patients p INNER JOIN encounters e 
+on p.id = e.PATIENT GROUP by p.city
+order by cnt desc
+
+
+
+
+
+SELECT DISTINCT encounterclass from encounters
+--4. To find out the cities with up to 50 counts of emergency cases.
+SELECT p.CITY , count(e.id) as cnt 
+from patients p INNER JOIN encounters e 
+on p.id = e.PATIENT
+WHERE e.ENCOUNTERCLASS = 'emergency' 
+GROUP by p.city
+HAVING cnt >=15
+order by cnt desc
+
+
+
+
+
+SELECT count(*) from (
+SELECT substr(start,1,4) from encounters where cast(substr(start,1,4) as number) >= 2020) a
+
+
+---5. Now to find out the number of patients from Boston who came in 2020.
+SELECT p.CITY , count(p.Id) as cnt
+from patients p INNER JOIN encounters e 
+on p.id = e.PATIENT
+WHERE p.CITY = 'Boston' and cast(substr(start,1,4) as number) >= 2020
+
+
+---6. To find out the top recurring conditions.
+
+SELECT  c.description, count(p.id) as Recurring_conditions_cnt 
+from patients p INNER join conditions c 
+on p.Id = c.PATIENT
+group by c.DESCRIPTION
+order by recurring_conditions_cnt desc
+limit 10
+
+
+SELECT start from encounters
+--7. To find out the month with the highest number of ambulatory cases since 2010.
+SELECT cast(substr(e.start,6,2) as number) as Month, count(p.id) as cnt
+from patients p INNER JOIN encounters e 
+on p.id = e.PATIENT
+WHERE  cast(substr(start,1,4) as number) >= 2010 and e.ENCOUNTERCLASS = 'ambulatory'
+GROUP by month
+order by cnt desc 
+
+
+
+--8. Likewise for emergency cases since 2010.
+SELECT cast(substr(e.start,6,2) as number) as Month, count(p.id) as cnt
+from patients p INNER JOIN encounters e 
+on p.id = e.PATIENT
+WHERE  cast(substr(start,1,4) as number) >= 2010 and e.ENCOUNTERCLASS = 'emergency'
+GROUP by month
+order by cnt desc 
+
+
+
+
+SELECT DISTINCT description from conditions where description LIKE '%dia%'
+SELECT DISTINCT race from patients
+--9. To check the number of diabetic patients by race.
+SELECT p.race , count(p.race) as cnt
+from patients p JOIN conditions c 
+on p.id = c.PATIENT
+where  c.DESCRIPTION LIKE '%diabetes%' and race = 'black'
+group by race 
+UNION
+SELECT p.race , count(p.race) as cnt
+from patients p JOIN conditions c 
+on p.id = c.PATIENT
+where  c.DESCRIPTION LIKE '%diabetes%' and race = 'white'
+group by race 
+UNION
+SELECT p.race , count(p.race) as cnt
+from patients p JOIN conditions c 
+on p.id = c.PATIENT
+where  c.DESCRIPTION LIKE '%diabetes%' and race = 'Asian'
+group by race 
+
+
+SELECT * from immunizations
+--10. Now to find out the Top 15 years with the most immunizations.
+SELECT substr(date, 1,4) as year , count(*) as cnt
+from immunizations 
+group by year
+order by cnt desc
+limit 15
+
+
+
+---11. From this general count, we’ll like to know the number of patients that were administered the IPV (Inactivated Polio Vaccine) in 2020.
+select i.DESCRIPTION, count(*) as cnt
+from patients p join immunizations i
+ on p.id = i.PATIENT
+ where i.DESCRIPTION = 'IPV' and substr(date, 1,4) = '2020'
+ GROUP by description
+
+
+
+---12. To find out the number of times each medical procedure was carried out in the hospital.
+SELECT description, count(*) as cnt
+from procedures
+group by description
+order by cnt desc
+
+
+---13. Top 15 conditions and their codes.
+SELECT description, code, count(*) as cnt
+from observations
+GROUP by description, code
+order by cnt desc
+limit 15
+
+
+---14. What if we want to find out the 20th–29th condition?
+SELECT description, code, count(*) as cnt
+from observations
+GROUP by description, code
+order by cnt desc
+LIMIT 9 OFFSET 19
